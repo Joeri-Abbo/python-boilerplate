@@ -1,0 +1,3 @@
+sentry:
+  dsn: ""
+  rate: 0.2

@@ -1,0 +1,8 @@
+venv
+.idea
+config.yml
+stats.txt
+storage
+temp
+.pytest_cache
+__pycache__
