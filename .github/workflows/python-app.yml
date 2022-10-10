@@ -13,27 +13,49 @@ permissions:
   contents: read
 
 jobs:
-  build:
-
+  clean:
+    uses: tracefy/github-actions-workflows/.github/workflows/utilities-clean.yml@master
+  laravel-tests:
+    needs:
+      - clean
+    container: mariadb:10.5
+    services:
+      mysql:
+        image: mariadb:10.5
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: api
+          MYSQL_ROOT_PASSWORD: mysql
+        ports:
+          - 3306:3306
     runs-on: [ self-hosted ]
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          python-version: "3.10.0"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Test with pytest
-        run: |
-          pytest
+          php-version: '8.1'
 
+      - uses: actions/checkout@v3
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Install Dependencies
+        run: |
+          ${{ secrets.PACKAGIST_SET_CONFIG}}
+          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --ignore-platform-reqs
+      - name: Setup DB
+        env:
+          MYSQL_HOST: 127.0.0.1:${{ job.services.mysql.ports['3306'] }}
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: api
+          MYSQL_ROOT_PASSWORD: mysql
+        run: php artisan migrate:fresh && php artisan db:seed
+
+      - name: Directory Permissions
+        run: chmod -R 777 storage bootstrap/cache
+
+      - name: Execute tests (Unit and Feature tests) via PHPUnit
+        run: php artisan test
