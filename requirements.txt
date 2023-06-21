@@ -2,4 +2,4 @@ flake8==6.0.0
 pytest==7.3.2
 sentry-sdk==1.25.1
 PyYAML==6.0
-Faker==18.10.1
+Faker==18.11.1
