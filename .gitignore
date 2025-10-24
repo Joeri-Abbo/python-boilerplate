@@ -1,8 +1,4 @@
-venv
-.idea
+.venv/
+__pycache__/
+.pytest_cache/
 config.yml
-stats.txt
-storage
-temp
-.pytest_cache
-__pycache__
